@@ -1,0 +1,12 @@
+{
+  "name": "scrape.ksl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "tcasey",
+  "license": "MIT",
+  "dependencies": {
+    "co": "^4.6.0",
+    "node-horseman": "^3.2.0",
+    "pdfconcat": "^1.0.2"
+  }
+}
