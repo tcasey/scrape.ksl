@@ -1,3 +1,4 @@
 {
-  "baseURL": "http://www.ksl.com/jobs/software_development/state/UT"
+  "baseURL": "http://www.ksl.com/jobs/software_development/state/UT",
+  "jobFolder": "./jobs/"
 }

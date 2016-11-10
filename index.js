@@ -26,12 +26,6 @@ co(function*() {
     $('.fraud-warning').remove();
   });
 
-  yield horseman.pdf('jobs.pdf', {
-           format: 'A2',
-           orientation: 'portrait',
-           margin: '0.2in'
-         });
-
   // calculations
   const totalListing = yield horseman.text('.total-listings');
   const numListing = yield horseman.count('.listing');
@@ -65,7 +59,7 @@ co(function*() {
       $('.fraud-warning').remove();
     });
 
-    yield horseman.pdf('jobs' + i + '.pdf', {
+    yield horseman.pdf(config.jobFolder + 'jobs' + i + '.pdf', {
       format: 'A2',
       orientation: 'portrait',
       margin: '0.2in'
