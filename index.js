@@ -34,6 +34,7 @@ co(function*() {
   console.log('Number of Listings on page: ', numListing);
   console.log('There are ' + pagination + ' total pages');
 
+  var job_title = [];
   for (var i = 1; pagination >= i; i++) {
     console.log('Rendered page ' + i + '');
 
@@ -51,7 +52,9 @@ co(function*() {
       }
     });
 
-    console.log('Goods ', title.goods);
+    job_title.push(title.goods);
+    var merged = JSON.stringify([].concat.apply([], job_title));
+    console.log('Goods ', merged);
 
     yield horseman.evaluate(function() {
       $('.ksl-header__outer').remove();
