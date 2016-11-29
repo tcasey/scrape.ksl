@@ -7,6 +7,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "node-horseman": "^3.2.0",
-    "pdfconcat": "^1.0.2"
+    "pdfconcat": "^1.0.2",
+    "tmp": "^0.0.31"
   }
 }

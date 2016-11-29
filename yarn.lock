@@ -54,7 +54,17 @@ node-phantom-simple@^2.2.4:
   dependencies:
     debug "^2.2.0"
 
+os-tmpdir@~1.0.1:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
+
 pdfconcat:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/pdfconcat/-/pdfconcat-1.0.2.tgz#aef92f132d30f5672aa88fcfbad4974abab011da"
+
+tmp:
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.31.tgz#8f38ab9438e17315e5dbd8b3657e8bfb277ae4a7"
+  dependencies:
+    os-tmpdir "~1.0.1"
 

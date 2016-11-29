@@ -1,7 +1,11 @@
 const Horseman = require('node-horseman'),
     pdfcon   = require('pdfconcat'),
     co       = require('co'),
-    config   = require('./configs/config.json');
+    tmp      = require('tmp'),
+    fs       = require('fs'),
+    config   = require('./configs/config.json'),
+    job_title = [],
+    user_input = 'Front';
 
 //  horseman options can be added & set within this object
 var horseman = new Horseman({timeout: 10000});
@@ -34,23 +38,44 @@ co(function*() {
   console.log('Number of Listings on page: ', numListing);
   console.log('There are ' + pagination + ' total pages');
 
-  // var vader = yield horseman.html('.listing');
-  // console.log('vader: ', vader);
-  var user_input = 'Front';
-  var job_title = [];
+ var injectable_function = function addElement () {
+    var newDiv = document.createElement('div');
+        newDiv.setAttribute('id', 'keyword');
+    var newContent = document.createTextNode(user_input);
+        newDiv.appendChild(newContent);//add the text node to the newly created div.
+    var currentDiv = document.getElementById('div1');
+    document.body.insertBefore(newDiv, currentDiv);
+};
+
+  var keyword = ("var user_input = '"+user_input +"';"+ injectable_function + 'addElement();');
+  var tmpobj = tmp.fileSync({
+      mode: 0644,
+      prefix: 'tmp-',
+      postfix: '.js'
+  });
+  fs.writeFile(tmpobj.name, keyword, function(err) {
+    if (err) {
+      return console.log(err);
+    }
+    console.log("The file was saved!");
+  });
+
+  yield horseman.wait(1000);
+
   for (var i = 1; pagination >= i; i++) {
     console.log('Rendered page ' + i + '');
-
+    yield horseman.injectJs(tmpobj.name);
+    yield horseman.waitForSelector('#keyword');
     yield horseman.evaluate(function() {
+        var keyword_match = $('#keyword').text();
         $('.search-results .job-title').each(function() {
-            if($(this).text().match('Front')) {
+            if($(this).text().match(keyword_match)) {
                 $(this).addClass('yoda');
             }
         });
     });
 
     yield horseman.wait(2000);
-    
     var title = yield horseman.evaluate(function() {
       var titles = [];
       $.each($('.yoda'), function (i, value) {
@@ -83,6 +108,11 @@ co(function*() {
     // yield horseman.waitForSelector('.listing');
   };
 
+  yield horseman.do(function(done) {
+    tmp.setGracefulCleanup();
+    setTimeout(done, 100);
+    console.log('setGracefulCleanup ran');
+  });
   yield horseman.close();
 }).catch(function(e){
   console.log(e)
