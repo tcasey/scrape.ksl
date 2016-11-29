@@ -34,19 +34,28 @@ co(function*() {
   console.log('Number of Listings on page: ', numListing);
   console.log('There are ' + pagination + ' total pages');
 
+  // var vader = yield horseman.html('.listing');
+  // console.log('vader: ', vader);
+  var user_input = 'Front';
   var job_title = [];
   for (var i = 1; pagination >= i; i++) {
     console.log('Rendered page ' + i + '');
 
-    // TODO: use exist method to check before using evaluate so the app won't crash
+    yield horseman.evaluate(function() {
+        $('.search-results .job-title').each(function() {
+            if($(this).text().match('Front')) {
+                $(this).addClass('yoda');
+            }
+        });
+    });
 
-
+    yield horseman.wait(2000);
+    
     var title = yield horseman.evaluate(function() {
       var titles = [];
-      $.each($('.job-title'), function (i, value) {
+      $.each($('.yoda'), function (i, value) {
         titles.push($(value).text())
       });
-
       return {
         goods: titles
       }
@@ -70,7 +79,8 @@ co(function*() {
 
     yield horseman.wait(3000);
     yield horseman.click('.next');
-    yield horseman.waitForSelector('.listing');
+    yield horseman.waitForNextPage();
+    // yield horseman.waitForSelector('.listing');
   };
 
   yield horseman.close();
