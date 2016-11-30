@@ -4,31 +4,23 @@ const Horseman = require('node-horseman'),
     tmp      = require('tmp'),
     fs       = require('fs'),
     config   = require('./configs/config.json'),
-    job_title = [],
     user_input = 'Front';
 
 //  horseman options can be added & set within this object
-var horseman = new Horseman({timeout: 10000});
+var horseman = new Horseman({timeout: 60000});
 horseman.userAgent('"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2790.0 Safari/537.36"')
 
 co(function*() {
 
-// Useful functions
-
+  // Useful functions
   yield horseman.on('urlChanged', function(targetUrl) {
     console.log('URL CHANGED IN APP: ', targetUrl);
   });
 
-// Navigation
+  // Navigation
   yield horseman.viewport(1280, 980);
   yield horseman.open(config.baseURL);
   yield horseman.waitForSelector('.listing');
-
-  yield horseman.evaluate(function() {
-    $('.ksl-header__outer').remove();
-    $('.facets').remove();
-    $('.fraud-warning').remove();
-  });
 
   // calculations
   const totalListing = yield horseman.text('.total-listings');
@@ -38,14 +30,15 @@ co(function*() {
   console.log('Number of Listings on page: ', numListing);
   console.log('There are ' + pagination + ' total pages');
 
- var injectable_function = function addElement () {
+  // temporary file used for keyword match
+  var injectable_function = function addElement () {
     var newDiv = document.createElement('div');
         newDiv.setAttribute('id', 'keyword');
     var newContent = document.createTextNode(user_input);
         newDiv.appendChild(newContent);//add the text node to the newly created div.
     var currentDiv = document.getElementById('div1');
     document.body.insertBefore(newDiv, currentDiv);
-};
+  };
 
   var keyword = ("var user_input = '"+user_input +"';"+ injectable_function + 'addElement();');
   var tmpobj = tmp.fileSync({
@@ -61,53 +54,77 @@ co(function*() {
   });
 
   yield horseman.wait(1000);
-
+  var data_loot = [];
   for (var i = 1; pagination >= i; i++) {
     console.log('Rendered page ' + i + '');
     yield horseman.injectJs(tmpobj.name);
     yield horseman.waitForSelector('#keyword');
-    yield horseman.evaluate(function() {
+
+    // setting indicator class to keyword match
+    var payload = yield horseman.evaluate(function() {
+        var listing_data = [];
         var keyword_match = $('#keyword').text();
-        $('.search-results .job-title').each(function() {
+        $('.search-results .listing').each(function(i) {
+
+            // keyword match check
             if($(this).text().match(keyword_match)) {
-                $(this).addClass('yoda');
+                $(this).addClass('yoda'+i);
+
+                // JSON structure
+                var listing_data_obj = {
+                    title: '',
+                    location: '',
+                    // company: ''
+                    time: ''
+                };
+
+                // grabbing data for each keyword match
+                $.each($('.yoda'+i+' h2'), function (i, value) {
+                  listing_data_obj.title = $(value).text();
+                });
+                $.each($('.yoda'+i+' .location'), function (i, value) {
+                  listing_data_obj.location = $(value).text();
+                });
+                // $.each($('.yoda'+i+' .company-name'), function (i, value) {
+                //   listing_data_obj.company = $(value).text();
+                // });
+                $.each($('.yoda'+i+' .posted-time'), function (i, value) {
+                  listing_data_obj.time = $(value).text();
+                });
+                listing_data.push(listing_data_obj);
             }
         });
+        return {
+          data: listing_data
+        }
     });
 
-    yield horseman.wait(2000);
-    var title = yield horseman.evaluate(function() {
-      var titles = [];
-      $.each($('.yoda'), function (i, value) {
-        titles.push($(value).text())
-      });
-      return {
-        goods: titles
-      }
-    });
+    // combine keyword matched data
+    if(payload.data[0]) {
+        data_loot.push(payload.data[0]);
+        console.log('payload', payload.data[0]);
+        console.log('data_loot', data_loot);
+    };
 
-    job_title.push(title.goods);
-    var merged = JSON.stringify([].concat.apply([], job_title));
-    console.log('Goods ', merged);
+    yield horseman.wait(200);
 
-    yield horseman.evaluate(function() {
-      $('.ksl-header__outer').remove();
-      $('.facets').remove();
-      $('.fraud-warning').remove();
-    });
-
+    // pdf capture
     yield horseman.pdf(config.jobFolder + 'jobs' + i + '.pdf', {
       format: 'A2',
       orientation: 'portrait',
       margin: '0.2in'
     });
 
-    yield horseman.wait(3000);
-    yield horseman.click('.next');
-    yield horseman.waitForNextPage();
-    // yield horseman.waitForSelector('.listing');
+    // only clicking next if not the last page
+    if(pagination !== i) {
+        yield horseman.wait(1000);
+        yield horseman.click('.next');
+        yield horseman.wait(2000);
+        yield horseman.waitForNextPage();
+    }
   };
 
+  // destroying temporary file used for keyword match
   yield horseman.do(function(done) {
     tmp.setGracefulCleanup();
     setTimeout(done, 100);
