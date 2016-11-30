@@ -73,6 +73,7 @@ co(function*() {
                 // JSON structure
                 var listing_data_obj = {
                     title: '',
+                    link: '',
                     location: '',
                     // company: ''
                     time: ''
@@ -81,6 +82,10 @@ co(function*() {
                 // grabbing data for each keyword match
                 $.each($('.yoda'+i+' h2'), function (i, value) {
                   listing_data_obj.title = $(value).text();
+                });
+                $.each($('.yoda'+i+' h2 a'), function (i, value) {
+                  var address = $(value).attr('href');
+                  listing_data_obj.link = 'www.ksl.com' + address;
                 });
                 $.each($('.yoda'+i+' .location'), function (i, value) {
                   listing_data_obj.location = $(value).text();
