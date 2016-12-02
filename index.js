@@ -1,10 +1,13 @@
 const Horseman = require('node-horseman'),
-    pdfcon   = require('pdfconcat'),
+    pdfconcat   = require('pdfconcat'),
     co       = require('co'),
     tmp      = require('tmp'),
     fs       = require('fs'),
     config   = require('./configs/config.json'),
-    user_input = 'Front';
+    user_input = 'Front',
+    report   =  'job_listings';
+var pdfName  =  [],
+    concatIt =  [];
 
 //  horseman options can be added & set within this object
 var horseman = new Horseman({timeout: 60000});
@@ -107,18 +110,23 @@ co(function*() {
     // combine keyword matched data
     if(payload.data[0]) {
         data_loot.push(payload.data[0]);
-        console.log('payload', payload.data[0]);
         console.log('data_loot', data_loot);
     };
 
     yield horseman.wait(200);
 
     // pdf capture
-    yield horseman.pdf(config.jobFolder + 'jobs' + i + '.pdf', {
-      format: 'A2',
-      orientation: 'portrait',
-      margin: '0.2in'
-    });
+        var tmpobjPDF = tmp.dirSync();
+        pdfName.unshift(report + i + '.pdf');
+        var tmpppdf = tmpobjPDF.name + pdfName[0];
+        concatIt.push(tmpppdf);
+        console.log("PDF file: ", tmpppdf);
+        console.log('PDF name', report + i + '.pdf');
+        yield horseman.pdf(tmpppdf, {
+            format: 'A2',
+            orientation: 'portrait',
+            margin: '0.2in'
+        });
 
     // only clicking next if not the last page
     if(pagination !== i) {
@@ -129,8 +137,24 @@ co(function*() {
     }
   };
 
-  // destroying temporary file used for keyword match
+  // combining pdf files into a single page
   yield horseman.do(function(done) {
+      var namelyOrdered = pdfName.reverse();
+      console.log('namelyOrdered stuff: ' + namelyOrdered + ' saved.');
+      function fileNamesToConcat(element) {
+          concatIt
+      }
+      console.log('PDF stuff: ' + concatIt + ' saved.');
+      namelyOrdered.forEach(fileNamesToConcat);
+      pdfconcat(concatIt, config.jobFolder + report + '.pdf', function(err) {
+          err ? console.log(err) : console.log('A NEW single Multi-paged PDF has been born');
+      });
+      setTimeout(done, 100);
+  });
+
+  // destroying temporary files
+  yield horseman.do(function(done) {
+    tmpobjPDF.removeCallback();
     tmp.setGracefulCleanup();
     setTimeout(done, 100);
     console.log('setGracefulCleanup ran');
