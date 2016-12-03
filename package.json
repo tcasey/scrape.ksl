@@ -5,9 +5,12 @@
   "author": "tcasey",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.1.4",
     "co": "^4.6.0",
     "fs": "^0.0.1-security",
     "node-horseman": "^3.2.0",
+    "nodemailer": "^2.6.4",
+    "nodemailer-smtp-transport": "^2.7.2",
     "pdfconcat": "^1.0.2",
     "tmp": "^0.0.31"
   }
